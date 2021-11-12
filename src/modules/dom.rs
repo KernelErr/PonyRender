@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-type AttrMap = HashMap<String, String>;
+pub type AttrMap = HashMap<String, String>;
 
 #[derive(Debug, PartialEq)]
 enum NodeType {
@@ -9,7 +9,8 @@ enum NodeType {
     Comment(String),
 }
 
-struct Node {
+#[derive(Debug, PartialEq)]
+pub struct Node {
     children: Vec<Node>,
     node_type: NodeType,
 }
@@ -21,14 +22,14 @@ struct ElementData {
 }
 
 impl Node {
-    fn text(data: String) -> Node {
+    pub fn text(data: String) -> Node {
         Node {
             children: vec![],
             node_type: NodeType::Text(data),
         }
     }
 
-    fn elem(name: String, attrs: AttrMap, children: Vec<Node>) -> Node {
+    pub fn elem(name: String, attrs: AttrMap, children: Vec<Node>) -> Node {
         Node {
             children,
             node_type: NodeType::Element(ElementData {
@@ -38,7 +39,7 @@ impl Node {
         }
     }
 
-    fn comment(data: String) -> Node {
+    pub fn comment(data: String) -> Node {
         Node {
             children: vec![],
             node_type: NodeType::Comment(data),
