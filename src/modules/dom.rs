@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub type AttrMap = HashMap<String, String>;
 
 #[derive(Debug, PartialEq)]
-enum NodeType {
+pub enum NodeType {
     Text(String),
     Element(ElementData),
     Comment(String),
@@ -11,14 +11,27 @@ enum NodeType {
 
 #[derive(Debug, PartialEq)]
 pub struct Node {
-    children: Vec<Node>,
-    node_type: NodeType,
+    pub children: Vec<Node>,
+    pub node_type: NodeType,
 }
 
 #[derive(Debug, PartialEq)]
-struct ElementData {
-    tag_name: String,
-    attributes: AttrMap,
+pub struct ElementData {
+    pub tag_name: String,
+    pub attributes: AttrMap,
+}
+
+impl ElementData {
+    pub fn id(&self) -> Option<&String> {
+        self.attributes.get("id")
+    }
+
+    pub fn classes(&self) -> HashSet<&str> {
+        match self.attributes.get("class") {
+            Some(classlist) => classlist.split(' ').collect(),
+            None => HashSet::new(),
+        }
+    }
 }
 
 impl Node {
@@ -60,10 +73,13 @@ mod tests {
     #[test]
     fn test_node_elem() {
         let node = Node::elem("div".to_string(), AttrMap::new(), vec![]);
-        assert_eq!(node.node_type, NodeType::Element(ElementData {
-            tag_name: "div".to_string(),
-            attributes: AttrMap::new(),
-        }));
+        assert_eq!(
+            node.node_type,
+            NodeType::Element(ElementData {
+                tag_name: "div".to_string(),
+                attributes: AttrMap::new(),
+            })
+        );
     }
 
     #[test]
