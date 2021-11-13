@@ -1,7 +1,8 @@
 use super::css;
 use super::dom;
+use std::cmp::Reverse;
 
-pub fn parse(source: String) -> dom::Node {
+pub fn parse_html(source: String) -> dom::Node {
     let mut nodes = Parser {
         pos: 0,
         input: source,
@@ -12,6 +13,16 @@ pub fn parse(source: String) -> dom::Node {
         nodes.swap_remove(0)
     } else {
         dom::Node::elem("html".to_string(), dom::AttrMap::new(), nodes)
+    }
+}
+
+pub fn parse_css(source: String) -> css::Stylesheet {
+    let mut parser = Parser {
+        pos: 0,
+        input: source,
+    };
+    css::Stylesheet {
+        rules: parser.parse_rules(),
     }
 }
 
@@ -59,10 +70,7 @@ impl Parser {
     // HTML Part Below
 
     fn parse_tag_name(&mut self) -> String {
-        self.consume_while(|c| match c {
-            'a'..='z' | 'A'..='Z' | '0'..='9' | '-' => true,
-            _ => false,
-        })
+        self.consume_while(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-'))
     }
 
     fn parse_node(&mut self) -> dom::Node {
@@ -162,6 +170,18 @@ impl Parser {
 
     // CSS Part Below
 
+    fn parse_rules(&mut self) -> Vec<css::Rule> {
+        let mut rules = Vec::new();
+        loop {
+            self.consume_whitespace();
+            if self.eof() {
+                break;
+            }
+            rules.push(self.parse_rule());
+        }
+        rules
+    }
+
     fn parse_simple_selector(&mut self) -> css::SimpleSelector {
         let mut selector = css::SimpleSelector {
             tag_name: None,
@@ -208,12 +228,12 @@ impl Parser {
                     self.consume_whitespace();
                 }
                 '{' => break,
-                c => {
+                _c => {
                     // FIX ME: When format is wrong
                 }
             }
         }
-        selectors.sort_by(|a, b| b.specificity().cmp(&a.specificity()));
+        selectors.sort_by_key(|b| Reverse(b.specificity()));
         selectors
     }
 
@@ -242,7 +262,7 @@ impl Parser {
 
         css::Declaration {
             name: property_name,
-            value: value,
+            value,
         }
     }
 
@@ -263,10 +283,7 @@ impl Parser {
     }
 
     fn parse_float(&mut self) -> f32 {
-        let s = self.consume_while(|c| match c {
-            '0'..='9' | '.' => true,
-            _ => false,
-        });
+        let s = self.consume_while(|c| matches!(c, '0'..='9' | '.'));
         s.parse().unwrap()
     }
 
@@ -297,10 +314,7 @@ impl Parser {
 }
 
 fn valid_identifier_char(c: char) -> bool {
-    match c {
-        'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' => true, // TODO: Include U+00A0 and higher.
-        _ => false,
-    }
+    matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_')
 }
 
 #[cfg(test)]
@@ -402,6 +416,35 @@ mod tests {
                     ),
                 ]
             )
+        );
+    }
+
+    #[test]
+    fn test_parse_css() {
+        use super::css::SimpleSelector;
+        let mut parser = Parser {
+            pos: 0,
+            input: "p { color: #ff0000; }".to_string(),
+        };
+        let rule = parser.parse_rules();
+        assert_eq!(
+            rule,
+            vec![css::Rule {
+                selectors: vec![css::Selector::Simple(SimpleSelector {
+                    tag_name: Some("p".to_string()),
+                    id: None,
+                    class: vec![],
+                })],
+                declarations: vec![css::Declaration {
+                    name: "color".to_string(),
+                    value: css::Value::Color(css::Color {
+                        red: 255,
+                        green: 0,
+                        blue: 0,
+                        alpha: 255,
+                    })
+                }]
+            }]
         );
     }
 }

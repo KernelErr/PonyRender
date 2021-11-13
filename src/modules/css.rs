@@ -5,12 +5,6 @@ pub struct Stylesheet {
     pub rules: Vec<Rule>,
 }
 
-impl Stylesheet {
-    pub fn new() -> Stylesheet {
-        Stylesheet { rules: Vec::new() }
-    }
-}
-
 #[derive(Debug, PartialEq)]
 pub struct Rule {
     pub selectors: Vec<Selector>,
@@ -50,6 +44,16 @@ pub enum Value {
     Keyword(String),
     Length(f32, Unit),
     Color(Color),
+}
+
+impl Value {
+    /// Return the size of a length in px, or zero for non-lengths.
+    pub fn to_px(&self) -> f32 {
+        match *self {
+            Value::Length(f, Unit::Px) => f,
+            _ => 0.0,
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
