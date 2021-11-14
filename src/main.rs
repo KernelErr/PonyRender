@@ -8,7 +8,7 @@ fn main() {
     let read_source = |filename: &str| read_to_string(filename).expect("Failed to read file");
 
     let html = read_source("tests/rainbow.html");
-    let css = read_source("tests/rainbow.css");
+    let css = read_source("tests/empty.css");
 
     let initial_containing_block = layout::Dimensions {
         content: layout::Rect {
@@ -23,7 +23,7 @@ fn main() {
     };
 
     let root_node = parser::parse_html(html);
-    let stylesheet = parser::parse_css(css);
+    let stylesheet = parser::parse_css(css, &root_node);
     let style_root = style::style_tree(&root_node, &stylesheet);
     let layout_root = layout::layout_tree(&style_root, initial_containing_block);
     let canvas = display::paint(&layout_root, initial_containing_block.content);

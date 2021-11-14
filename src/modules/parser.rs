@@ -16,14 +16,39 @@ pub fn parse_html(source: String) -> dom::Node {
     }
 }
 
-pub fn parse_css(source: String) -> css::Stylesheet {
+pub fn parse_css(source: String, node: &dom::Node) -> css::Stylesheet {
     let mut parser = Parser {
         pos: 0,
         input: source,
     };
+    let mut rules = parser.parse_rules();
+    let mut style_node = parse_style_node(node);
+    rules.append(&mut style_node);
     css::Stylesheet {
-        rules: parser.parse_rules(),
+        rules,
     }
+}
+
+fn parse_style_node(node: &dom::Node) -> Vec::<css::Rule> {
+    let mut rules = Vec::new();
+    if let dom::NodeType::Element(ref data) = node.node_type {
+        if data.tag_name == "style" {
+            for child in &node.children {
+                if let dom::NodeType::Text(ref text) = child.node_type {
+                    let mut parser = Parser {
+                        pos: 0,
+                        input: text.clone(),
+                    };
+                    rules.append(&mut parser.parse_rules());
+                }
+            }
+        } else {
+            for child in &node.children {
+                rules.append(&mut parse_style_node(child));
+            }
+        }
+    }
+    rules
 }
 
 struct Parser {

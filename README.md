@@ -1,3 +1,20 @@
+# PonyRender
+
+A tiny toy HTML render engine based on [Robinson](https://github.com/mbrubeck/robinson). This project is aimed to learn basic concepts about how a web render engine works. So it is definitely not suitable to fit any real application condition.
+
+Now PonyRender is under **slow** development.
+
+## Beyond Robinson
+
+Based on Robinson's source code, PonyRender did further work listed below:
+
+- Allow comment like `<!-- This is a comment -->`
+- Add unit tests
+- Allow `style` tag
+
+## Demo
+
+```html
 <style>
     * { display: block; padding: 12px; }
     .a { background: #ff0000; }
@@ -22,3 +39,6 @@
         </div>
     </div>
 </div>
+```
+
+![rainbow](./docs/rainbow.png)
